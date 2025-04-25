@@ -361,8 +361,9 @@ async function handleIncomingMessage(data) {
       console.log("[润色助手] Last Message Object for UI Update:", lastMessage);
 
       // 检查 lastMessage 是否有 ID 属性 (通常是 'id')
-      if (lastMessage && typeof lastMessage.id !== "undefined") {
-        const messageId = context.chat.length - 1; // 获取消息 ID
+      const messageId = context.chat.length - 1; // 获取消息 ID
+      if (lastMessage && typeof messageId !== "undefined") {
+        
 
         // 优先尝试触发 MESSAGE_UPDATED 事件，传递消息 ID
         if (
