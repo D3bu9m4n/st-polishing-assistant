@@ -408,12 +408,12 @@ async function handleIncomingMessage(data) {
         toastr.error("[润色助手]润色失败,未找到元素id");
       }
     } catch (updateError) {
-      console.error("[润色助手] Error during UI update attempt:", updateError);
       toastr.error("[润色助手]润色失败,出现异常：", updateError);
+      console.error("[润色助手] Error during UI update attempt:", updateError);
     }
   } catch (error) {
-    console.error("[润色助手] API调用或处理失败:", error);
     toastr.error("[润色助手]润色失败,API调用或处理失败", error);
+    console.error("[润色助手] API调用或处理失败:", error);
     // Optionally, notify the user via the UI or keep the original message
   }
 }
