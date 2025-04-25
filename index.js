@@ -4,6 +4,7 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
 import { eventSource, event_types } from "../../../../script.js";
 import { messageFormatting } from "../../../../script.js";
+import { fixToastrForDialogs } from '../../../../scripts/popup.js';
 
 // 扩展名称和路径
 const extensionName = "st-polishing-assistant";
@@ -87,6 +88,19 @@ const defaultSettings = {
 【禁忌事项】
 × 禁止弱化原始描写的冲击力
 × 不可替换关键器官/动作的专业术语`,
+};
+
+// Configure toast library:
+toastr.options.escapeHtml = true; // Prevent raw HTML inserts
+toastr.options.timeOut = 4000; // How long the toast will display without user interaction
+toastr.options.extendedTimeOut = 10000; // How long the toast will display after a user hovers over it
+toastr.options.progressBar = true; // Visually indicate how long before a toast expires.
+toastr.options.closeButton = true; // enable a close button
+toastr.options.positionClass = 'toast-top-center'; // Where to position the toast container
+toastr.options.onHidden = () => {
+    // If we have any dialog still open, the last "hidden" toastr will remove the toastr-container. We need to keep it alive inside the dialog though
+    // so the toasts still show up inside there.
+    fixToastrForDialogs();
 };
 
 // --- Helper Functions ---
