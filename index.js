@@ -362,7 +362,7 @@ async function handleIncomingMessage(data) {
 
       // 检查 lastMessage 是否有 ID 属性 (通常是 'id')
       if (lastMessage && typeof lastMessage.id !== "undefined") {
-        const messageId = lastMessage.id; // 获取消息 ID
+        const messageId = context.chat.length - 1; // 获取消息 ID
 
         // 优先尝试触发 MESSAGE_UPDATED 事件，传递消息 ID
         if (
@@ -381,6 +381,7 @@ async function handleIncomingMessage(data) {
           typeof eventSource !== "undefined" &&
           typeof event_types !== "undefined" &&
           event_types.MESSAGE_EDITED
+
         ) {
           console.log(
             `[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event with ID: ${messageId}`
