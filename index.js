@@ -361,29 +361,6 @@ async function handleIncomingMessage(data) {
       const messageId = context.chat.length - 1;
       const updatedMessageObject = context.chat[messageId]; // 获取更新后的消息对象
 
-      // 触发事件（可能某些监听器需要它）
-      if (
-        typeof eventSource !== "undefined" &&
-        typeof event_types !== "undefined" &&
-        event_types.MESSAGE_UPDATED
-      ) {
-        console.log(
-          `[润色助手] Emitting MESSAGE_UPDATED event for mesid: ${messageId}`
-        );
-        eventSource.emit(event_types.MESSAGE_UPDATED, messageId);
-      } else if (
-        typeof eventSource !== "undefined" &&
-        typeof event_types !== "undefined" &&
-        event_types.MESSAGE_EDITED
-      ) {
-        console.log(
-          `[润色助手] Emitting MESSAGE_EDITED event for mesid: ${messageId}`
-        );
-        eventSource.emit(event_types.MESSAGE_EDITED, messageId);
-      } else {
-        console.warn("[润色助手] No suitable UI update event found to emit.");
-      }
-
       // 直接操作 DOM 来确保更新
       // 找到对应的消息 div
       const messageDiv = $(`.mes[mesid="${messageId}"]`);
@@ -394,8 +371,7 @@ async function handleIncomingMessage(data) {
         const mesTextElement = messageDiv.find(".mes_text"); // 找到显示文本的元素
 
         if (
-          mesTextElement.length > 0 &&
-          typeof messageFormatting === "function"
+          mesTextElement.length > 0
         ) {
           // 清空旧内容
           mesTextElement.empty();
@@ -413,18 +389,13 @@ async function handleIncomingMessage(data) {
             `[润色助手] Successfully updated DOM for mesid ${messageId} using messageFormatting.`
           );
 
-          // 可选：如果消息中包含代码块，可能需要重新应用代码块的复制按钮等功能
-          // if (typeof addCopyToCodeBlocks === 'function') { // 检查函数是否存在
-          //    addCopyToCodeBlocks(messageDiv);
-          // }
+          // 在 DOM 更新后再触发事件（符合官方逻辑）
+          console.log(`[润色助手] Emitting MESSAGE_UPDATED event with ID: ${messageId} after DOM update.`);
+          eventSource.emit(event_types.MESSAGE_UPDATED, messageId);
         } else {
           if (mesTextElement.length === 0)
             console.warn(
               `[润色助手] Could not find .mes_text element within mesid ${messageId}.`
-            );
-          if (typeof messageFormatting !== "function")
-            console.warn(
-              `[润色助手] messageFormatting function not available/imported.`
             );
           console.warn(`[润色助手] DOM update skipped for mesid ${messageId}.`);
         }
