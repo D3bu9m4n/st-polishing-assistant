@@ -357,47 +357,23 @@ async function handleIncomingMessage(data) {
     // If the UI doesn't update, this might be the reason. Consider adding:
     // ui.updateChat(); // Or whatever the correct function is, if it exists and is accessible.
     try {
-      // 确认 lastMessage 对象结构，特别是 ID 属性名
-      console.log("[润色助手] Last Message Object for UI Update:", lastMessage);
+      // 获取消息的 ID (它在 chat 数组中的索引)
+      const messageId = context.chat.length - 1;
 
-      // 检查 lastMessage 是否有 ID 属性 (通常是 'id')
-      const messageId = context.chat.length - 1; // 获取消息 ID
-      if (lastMessage && typeof messageId !== "undefined") {
-        
-
-        // 优先尝试触发 MESSAGE_UPDATED 事件，传递消息 ID
-        if (
-          typeof eventSource !== "undefined" &&
-          typeof event_types !== "undefined" &&
-          event_types.MESSAGE_UPDATED
-        ) {
-          console.log(
-            `[润色助手] Attempting to emit MESSAGE_UPDATED event with ID: ${messageId}`
-          );
-          // 传递消息 ID 作为参数
-          eventSource.emit(event_types.MESSAGE_UPDATED, messageId); // <--- 修改这里
-        }
-        // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED
-        else if (
-          typeof eventSource !== "undefined" &&
-          typeof event_types !== "undefined" &&
-          event_types.MESSAGE_EDITED
-
-        ) {
-          console.log(
-            `[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event with ID: ${messageId}`
-          );
-          // 同样传递消息 ID
-          eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 修改这里
-        } else {
-          console.warn(
-            "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
-          );
-        }
+      // 优先尝试触发 MESSAGE_UPDATED 事件，传递 messageId
+      // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED，传递 messageId
+      if (
+        typeof eventSource !== "undefined" &&
+        typeof event_types !== "undefined" &&
+        event_types.MESSAGE_EDITED
+      ) {
+        console.log(
+          `[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event for mesid: ${messageId}`
+        );
+        eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 传递 ID
       } else {
         console.warn(
-          "[润色助手] Could not find ID property (e.g., 'id') on lastMessage object. Cannot trigger UI update event correctly.",
-          lastMessage
+          "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
         );
       }
     } catch (updateError) {
