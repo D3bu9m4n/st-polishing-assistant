@@ -361,21 +361,37 @@ async function handleIncomingMessage(data) {
       const messageId = context.chat.length - 1;
 
       // 优先尝试触发 MESSAGE_UPDATED 事件，传递 messageId
-      if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined' && event_types.MESSAGE_UPDATED) {
-          console.log(`[润色助手] Attempting to emit MESSAGE_UPDATED event for mesid: ${messageId}`);
-          eventSource.emit(event_types.MESSAGE_UPDATED, messageId); // <--- 传递 ID
+      if (
+        typeof eventSource !== "undefined" &&
+        typeof event_types !== "undefined" &&
+        event_types.MESSAGE_UPDATED
+      ) {
+        console.log(
+          `[润色助手] Attempting to emit MESSAGE_UPDATED event for mesid: ${messageId}`
+        );
+        eventSource.emit(event_types.MESSAGE_UPDATED, messageId); // <--- 传递 ID
       }
       // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED，传递 messageId
-      else if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined' && event_types.MESSAGE_EDITED) {
-          console.log(`[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event for mesid: ${messageId}`);
-          eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 传递 ID
+      else if (
+        typeof eventSource !== "undefined" &&
+        typeof event_types !== "undefined" &&
+        event_types.MESSAGE_EDITED
+      ) {
+        console.log(
+          `[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event for mesid: ${messageId}`
+        );
+        eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 传递 ID
+      } else {
+        console.warn(
+          "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
+        );
       }
-       else {
-          console.warn("[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically.");
-      }
-  } catch (updateError) {
-       console.error("[润色助手] Error during UI update attempt via event emission:", updateError);
-  }
+    } catch (updateError) {
+      console.error(
+        "[润色助手] Error during UI update attempt via event emission:",
+        updateError
+      );
+    }
   } catch (error) {
     console.error("[润色助手] API调用或处理失败:", error);
     // Optionally, notify the user via the UI or keep the original message
