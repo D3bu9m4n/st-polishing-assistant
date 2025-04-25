@@ -4,7 +4,6 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
 import { eventSource, event_types } from "../../../../script.js";
 import { messageFormatting } from "../../../../script.js";
-import { fixToastrForDialogs } from '../../../../scripts/popup.js';
 
 // 扩展名称和路径
 const extensionName = "st-polishing-assistant";
@@ -88,19 +87,6 @@ const defaultSettings = {
 【禁忌事项】
 × 禁止弱化原始描写的冲击力
 × 不可替换关键器官/动作的专业术语`,
-};
-
-// Configure toast library:
-toastr.options.escapeHtml = true; // Prevent raw HTML inserts
-toastr.options.timeOut = 4000; // How long the toast will display without user interaction
-toastr.options.extendedTimeOut = 10000; // How long the toast will display after a user hovers over it
-toastr.options.progressBar = true; // Visually indicate how long before a toast expires.
-toastr.options.closeButton = true; // enable a close button
-toastr.options.positionClass = 'toast-top-center'; // Where to position the toast container
-toastr.options.onHidden = () => {
-    // If we have any dialog still open, the last "hidden" toastr will remove the toastr-container. We need to keep it alive inside the dialog though
-    // so the toasts still show up inside there.
-    fixToastrForDialogs();
 };
 
 // --- Helper Functions ---
@@ -422,11 +408,13 @@ async function handleIncomingMessage(data) {
         toastr.error("[润色助手]润色失败,未找到元素id");
       }
     } catch (updateError) {
-      toastr.error("[润色助手]润色失败,出现异常：", updateError);
+      const updateErrorMessage = `[润色助手] 界面更新时出现异常: ${updateError.message || updateError.toString()}`;
+      toastr.error(updateErrorMessage);
       console.error("[润色助手] Error during UI update attempt:", updateError);
     }
   } catch (error) {
-    toastr.error("[润色助手]润色失败,API调用或处理失败", error);
+    const errorMessage = `[润色助手] 润色失败: ${error.message || error.toString()}`;
+    toastr.error(errorMessage);
     console.error("[润色助手] API调用或处理失败:", error);
     // Optionally, notify the user via the UI or keep the original message
   }
