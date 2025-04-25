@@ -267,7 +267,8 @@ async function handleIncomingMessage(data) {
 
         // 用润色后的内容更新消息
         // Replace the original full match (tags + content) with new structure (tags + polished content)
-        lastMessage.mes = messageText.replace(originalFullMatch, `${matchedPair.open}\n${polishedContent}\n${matchedPair.close}`);
+        const originalMessageText = messageText; // 保留原始文本以防万一
+        lastMessage.mes = messageText.replace(originalFullMatch, `\n${matchedPair.open}\n${polishedContent}\n${matchedPair.close}\n`);
 
         console.log("[润色助手] 内容已润色并替换");
 
@@ -279,7 +280,23 @@ async function handleIncomingMessage(data) {
         // For now, we assume modifying context.chat is sufficient.
         // If the UI doesn't update, this might be the reason. Consider adding:
         // ui.updateChat(); // Or whatever the correct function is, if it exists and is accessible.
-
+        try {
+          if (typeof ui !== 'undefined' && typeof ui.updateChat === 'function') {
+              console.log("[润色助手] Calling ui.updateChat() to refresh display.");
+              ui.updateChat(); // <--- 添加这一行
+          } else {
+               console.warn("[润色助手] ui.updateChat() function not found. UI might not update automatically.");
+               // 作为备选，可以尝试触发一个可能被监听的事件（见方法二）
+               if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined' && event_types.CHAT_UPDATED) {
+                  console.log("[润色助手] Attempting to emit CHAT_UPDATED event.");
+                  eventSource.emit(event_types.CHAT_UPDATED);
+               }
+          }
+      } catch (uiError) {
+          console.error("[润色助手] Error calling UI update function:", uiError);
+          // 如果更新UI失败，可能需要回滚消息更改，或者至少记录下来
+          // lastMessage.mes = originalMessageText; // 可选：回滚
+      }
 
     } catch (error) {
         console.error("[润色助手] API调用或处理失败:", error);
