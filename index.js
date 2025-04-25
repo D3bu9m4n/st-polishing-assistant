@@ -370,9 +370,7 @@ async function handleIncomingMessage(data) {
         );
         const mesTextElement = messageDiv.find(".mes_text"); // 找到显示文本的元素
 
-        if (
-          mesTextElement.length > 0
-        ) {
+        if (mesTextElement.length > 0) {
           // 清空旧内容
           mesTextElement.empty();
           // 使用 messageFormatting 生成新内容并添加
@@ -390,7 +388,10 @@ async function handleIncomingMessage(data) {
           );
 
           // 在 DOM 更新后再触发事件（符合官方逻辑）
-          console.log(`[润色助手] Emitting MESSAGE_UPDATED event with ID: ${messageId} after DOM update.`);
+          toastr.success("[润色助手]成功润色");
+          console.log(
+            `[润色助手] Emitting MESSAGE_UPDATED event with ID: ${messageId} after DOM update.`
+          );
           eventSource.emit(event_types.MESSAGE_UPDATED, messageId);
         } else {
           if (mesTextElement.length === 0)
@@ -398,17 +399,21 @@ async function handleIncomingMessage(data) {
               `[润色助手] Could not find .mes_text element within mesid ${messageId}.`
             );
           console.warn(`[润色助手] DOM update skipped for mesid ${messageId}.`);
+          toastr.error("[润色助手]润色失败");
         }
       } else {
         console.warn(
           `[润色助手] Could not find message element for mesid ${messageId}. DOM not updated.`
         );
+        toastr.error("[润色助手]润色失败,未找到元素id");
       }
     } catch (updateError) {
       console.error("[润色助手] Error during UI update attempt:", updateError);
+      toastr.error("[润色助手]润色失败,出现异常：", updateError);
     }
   } catch (error) {
     console.error("[润色助手] API调用或处理失败:", error);
+    toastr.error("[润色助手]润色失败,API调用或处理失败", error);
     // Optionally, notify the user via the UI or keep the original message
   }
 }
