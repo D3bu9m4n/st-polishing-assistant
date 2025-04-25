@@ -3,6 +3,7 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
 import { eventSource, event_types } from "../../../../script.js";
+import { ui } from "../../../../script.js";
 
 // 扩展名称和路径
 const extensionName = "st-polishing-assistant";
