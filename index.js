@@ -357,40 +357,83 @@ async function handleIncomingMessage(data) {
     // If the UI doesn't update, this might be the reason. Consider adding:
     // ui.updateChat(); // Or whatever the correct function is, if it exists and is accessible.
     try {
-      // 获取消息的 ID (它在 chat 数组中的索引)
       const messageId = context.chat.length - 1;
+      const updatedMessageObject = context.chat[messageId]; // 获取更新后的消息对象
 
-      // 优先尝试触发 MESSAGE_UPDATED 事件，传递 messageId
+      // 触发事件（可能某些监听器需要它）
       if (
         typeof eventSource !== "undefined" &&
         typeof event_types !== "undefined" &&
         event_types.MESSAGE_UPDATED
       ) {
         console.log(
-          `[润色助手] Attempting to emit MESSAGE_UPDATED event for mesid: ${messageId}`
+          `[润色助手] Emitting MESSAGE_UPDATED event for mesid: ${messageId}`
         );
-        eventSource.emit(event_types.MESSAGE_UPDATED, messageId); // <--- 传递 ID
-      }
-      // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED，传递 messageId
-      else if (
+        eventSource.emit(event_types.MESSAGE_UPDATED, messageId);
+      } else if (
         typeof eventSource !== "undefined" &&
         typeof event_types !== "undefined" &&
         event_types.MESSAGE_EDITED
       ) {
         console.log(
-          `[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event for mesid: ${messageId}`
+          `[润色助手] Emitting MESSAGE_EDITED event for mesid: ${messageId}`
         );
-        eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 传递 ID
+        eventSource.emit(event_types.MESSAGE_EDITED, messageId);
+      } else {
+        console.warn("[润色助手] No suitable UI update event found to emit.");
+      }
+
+      // 直接操作 DOM 来确保更新
+      // 找到对应的消息 div
+      const messageDiv = $(`.mes[mesid="${messageId}"]`);
+      if (messageDiv.length > 0) {
+        console.log(
+          `[润色助手] Found message element for mesid ${messageId}. Attempting direct DOM update.`
+        );
+        const mesTextElement = messageDiv.find(".mes_text"); // 找到显示文本的元素
+
+        if (
+          mesTextElement.length > 0 &&
+          typeof messageFormatting === "function"
+        ) {
+          // 清空旧内容
+          mesTextElement.empty();
+          // 使用 messageFormatting 生成新内容并添加
+          mesTextElement.append(
+            messageFormatting(
+              updatedMessageObject.mes, // 使用润色后的文本
+              updatedMessageObject.name, // 角色名
+              updatedMessageObject.is_system, // 是否系统消息
+              updatedMessageObject.is_user, // 是否用户消息
+              messageId // 消息 ID
+            )
+          );
+          console.log(
+            `[润色助手] Successfully updated DOM for mesid ${messageId} using messageFormatting.`
+          );
+
+          // 可选：如果消息中包含代码块，可能需要重新应用代码块的复制按钮等功能
+          // if (typeof addCopyToCodeBlocks === 'function') { // 检查函数是否存在
+          //    addCopyToCodeBlocks(messageDiv);
+          // }
+        } else {
+          if (mesTextElement.length === 0)
+            console.warn(
+              `[润色助手] Could not find .mes_text element within mesid ${messageId}.`
+            );
+          if (typeof messageFormatting !== "function")
+            console.warn(
+              `[润色助手] messageFormatting function not available/imported.`
+            );
+          console.warn(`[润色助手] DOM update skipped for mesid ${messageId}.`);
+        }
       } else {
         console.warn(
-          "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
+          `[润色助手] Could not find message element for mesid ${messageId}. DOM not updated.`
         );
       }
     } catch (updateError) {
-      console.error(
-        "[润色助手] Error during UI update attempt via event emission:",
-        updateError
-      );
+      console.error("[润色助手] Error during UI update attempt:", updateError);
     }
   } catch (error) {
     console.error("[润色助手] API调用或处理失败:", error);
