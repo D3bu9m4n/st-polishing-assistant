@@ -357,38 +357,25 @@ async function handleIncomingMessage(data) {
     // If the UI doesn't update, this might be the reason. Consider adding:
     // ui.updateChat(); // Or whatever the correct function is, if it exists and is accessible.
     try {
-      // 优先尝试触发 MESSAGE_UPDATED 事件
-      if (
-        typeof eventSource !== "undefined" &&
-        typeof event_types !== "undefined" &&
-        event_types.MESSAGE_UPDATED
-      ) {
-        console.log("[润色助手] Attempting to emit MESSAGE_UPDATED event.");
-        // 传递被更新的消息对象作为参数
-        eventSource.emit(event_types.MESSAGE_UPDATED, lastMessage);
+      // 获取消息的 ID (它在 chat 数组中的索引)
+      const messageId = context.chat.length - 1;
+
+      // 优先尝试触发 MESSAGE_UPDATED 事件，传递 messageId
+      if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined' && event_types.MESSAGE_UPDATED) {
+          console.log(`[润色助手] Attempting to emit MESSAGE_UPDATED event for mesid: ${messageId}`);
+          eventSource.emit(event_types.MESSAGE_UPDATED, messageId); // <--- 传递 ID
       }
-      // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED
-      else if (
-        typeof eventSource !== "undefined" &&
-        typeof event_types !== "undefined" &&
-        event_types.MESSAGE_EDITED
-      ) {
-        console.log(
-          "[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event."
-        );
-        // 同样传递消息对象
-        eventSource.emit(event_types.MESSAGE_EDITED, lastMessage);
-      } else {
-        console.warn(
-          "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
-        );
+      // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED，传递 messageId
+      else if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined' && event_types.MESSAGE_EDITED) {
+          console.log(`[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event for mesid: ${messageId}`);
+          eventSource.emit(event_types.MESSAGE_EDITED, messageId); // <--- 传递 ID
       }
-    } catch (updateError) {
-      console.error(
-        "[润色助手] Error during UI update attempt via event emission:",
-        updateError
-      );
-    }
+       else {
+          console.warn("[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically.");
+      }
+  } catch (updateError) {
+       console.error("[润色助手] Error during UI update attempt via event emission:", updateError);
+  }
   } catch (error) {
     console.error("[润色助手] API调用或处理失败:", error);
     // Optionally, notify the user via the UI or keep the original message
