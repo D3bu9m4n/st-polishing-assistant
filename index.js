@@ -340,7 +340,7 @@ async function handleIncomingMessage(data) {
 
     // 用润色后的内容更新消息
     // Replace the original full match (tags + content) with new structure (tags + polished content)
-    const originalMessageText = messageText; // 保留原始文本以防万一
+    // const originalMessageText = messageText; // 保留原始文本以防万一
     lastMessage.mes = messageText.replace(
       originalFullMatch,
       `\n${matchedPair.open}\n${polishedContent}\n${matchedPair.close}\n`
@@ -357,22 +357,37 @@ async function handleIncomingMessage(data) {
     // If the UI doesn't update, this might be the reason. Consider adding:
     // ui.updateChat(); // Or whatever the correct function is, if it exists and is accessible.
     try {
+      // 优先尝试触发 MESSAGE_UPDATED 事件
       if (
         typeof eventSource !== "undefined" &&
         typeof event_types !== "undefined" &&
-        event_types.CHAT_UPDATED
+        event_types.MESSAGE_UPDATED
+      ) {
+        console.log("[润色助手] Attempting to emit MESSAGE_UPDATED event.");
+        // 传递被更新的消息对象作为参数
+        eventSource.emit(event_types.MESSAGE_UPDATED, lastMessage);
+      }
+      // 如果 MESSAGE_UPDATED 不可用或无效，尝试 MESSAGE_EDITED
+      else if (
+        typeof eventSource !== "undefined" &&
+        typeof event_types !== "undefined" &&
+        event_types.MESSAGE_EDITED
       ) {
         console.log(
-          "[润色助手] ui.updateChat() not found. Emitting CHAT_UPDATED event instead."
+          "[润色助手] MESSAGE_UPDATED not available/effective, attempting to emit MESSAGE_EDITED event."
         );
-        eventSource.emit(event_types.CHAT_UPDATED); // <--- 触发事件
+        // 同样传递消息对象
+        eventSource.emit(event_types.MESSAGE_EDITED, lastMessage);
       } else {
         console.warn(
-          "[润色助手] Neither ui.updateChat() nor CHAT_UPDATED event seem available. UI might not update automatically."
+          "[润色助手] Neither MESSAGE_UPDATED nor MESSAGE_EDITED events seem available. UI might not update automatically."
         );
       }
     } catch (updateError) {
-      console.error("[润色助手] Error during UI update attempt:", updateError);
+      console.error(
+        "[润色助手] Error during UI update attempt via event emission:",
+        updateError
+      );
     }
   } catch (error) {
     console.error("[润色助手] API调用或处理失败:", error);
