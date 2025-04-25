@@ -267,7 +267,7 @@ async function handleIncomingMessage(data) {
 
         // 用润色后的内容更新消息
         // Replace the original full match (tags + content) with new structure (tags + polished content)
-        lastMessage.mes = messageText.replace(originalFullMatch, `${matchedPair.open}${polishedContent}${matchedPair.close}`);
+        lastMessage.mes = messageText.replace(originalFullMatch, `${matchedPair.open}\n${polishedContent}\n${matchedPair.close}`);
 
         console.log("[润色助手] 内容已润色并替换");
 
