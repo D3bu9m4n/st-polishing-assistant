@@ -306,7 +306,7 @@ async function handleIncomingMessage(data) {
         },
       ],
     };
-    toastr.success("[润色助手]正在进行润色请耐心等候...");
+    toastr.info("[润色助手]正在进行润色请耐心等候...");
     console.log(
       "[润色助手] Sending request to API:",
       JSON.stringify(requestBody, null, 2)
