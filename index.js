@@ -279,6 +279,7 @@ async function handleIncomingMessage(data) {
     // 构建API请求
     const requestBody = {
       model: extension_settings[extensionName].modelName,
+      stream: false,
       messages: [
         {
           role: "system",
