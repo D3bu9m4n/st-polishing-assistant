@@ -17,6 +17,7 @@ const defaultSettings = {
   // User can edit this in settings
   matchingLabel:
     "<content>,</content>|<theatre>,</theatre>|<Developer_background>,</details>",
+  useStreaming: false, // Added default for streaming
   bannedWords: [
     "一丝",
     "一抹",
@@ -144,6 +145,9 @@ async function loadSettings() {
   extension_settings[extensionName].matchingLabel =
     extension_settings[extensionName].matchingLabel ||
     defaultSettings.matchingLabel;
+  // Load useStreaming setting
+  extension_settings[extensionName].useStreaming =
+    extension_settings[extensionName].useStreaming ?? defaultSettings.useStreaming;
 
   // 确保bannedWords是一个数组且不为空
   if (
@@ -166,6 +170,8 @@ async function loadSettings() {
   );
   // Update the new matchingLabel input field (assuming id="matching_label")
   $("#matching_label").val(extension_settings[extensionName].matchingLabel);
+  // Update the use_streaming checkbox
+  $("#use_streaming").prop("checked", extension_settings[extensionName].useStreaming);
   updateStatusText();
 }
 
@@ -190,6 +196,8 @@ function saveApiSettings() {
     .filter((word) => word !== "");
   // Save matchingLabel setting (assuming id="matching_label")
   extension_settings[extensionName].matchingLabel = $("#matching_label").val();
+  // Save useStreaming setting
+  extension_settings[extensionName].useStreaming = $("#use_streaming").is(":checked");
   saveSettingsDebounced();
 }
 
@@ -276,10 +284,11 @@ async function handleIncomingMessage(data) {
   ).length;
 
   try {
+    const useStreaming = extension_settings[extensionName].useStreaming;
     // 构建API请求
     const requestBody = {
       model: extension_settings[extensionName].modelName,
-      stream: false,
+      stream: useStreaming, // Set stream based on settings
       messages: [
         {
           role: "system",
@@ -310,34 +319,69 @@ async function handleIncomingMessage(data) {
     });
 
     if (!response.ok) {
-      // Try to get more details from the response body if possible
       let errorBody = `Status: ${response.status}`;
       try {
-        const errorJson = await response.json();
+        const errorJson = await response.json(); // Try to parse error if non-streaming
         errorBody += `, Body: ${JSON.stringify(errorJson)}`;
       } catch (e) {
-        // Ignore if response body is not JSON
+        const errorText = await response.text(); // Fallback to text if not JSON
+        errorBody += `, Body: ${errorText}`;
       }
       throw new Error(`API请求失败: ${errorBody}`);
     }
 
-    const result = await response.json();
+    let polishedContent = "";
 
-    // Check if the expected structure is present
-    if (
-      !result.choices ||
-      !result.choices[0] ||
-      !result.choices[0].message ||
-      typeof result.choices[0].message.content === "undefined"
-    ) {
-      console.error(
-        "[润色助手] API response format unexpected:",
-        JSON.stringify(result)
-      );
-      throw new Error("API 响应格式不符合预期");
+    if (useStreaming) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process buffer line by line
+        let lines = buffer.split("\n");
+        buffer = lines.pop(); // Keep the last partial line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const jsonStr = line.substring(6);
+            if (jsonStr === "[DONE]") {
+              break;
+            }
+            try {
+              const chunk = JSON.parse(jsonStr);
+              if (chunk.choices && chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content) {
+                polishedContent += chunk.choices[0].delta.content;
+              }
+            } catch (e) {
+              console.error("[润色助手] Error parsing stream chunk:", e, jsonStr);
+            }
+          }
+        }
+      }
+    } else {
+      const result = await response.json();
+      if (
+        !result.choices ||
+        !result.choices[0] ||
+        !result.choices[0].message ||
+        typeof result.choices[0].message.content === "undefined"
+      ) {
+        console.error(
+          "[润色助手] API response format unexpected (non-streaming):",
+          JSON.stringify(result)
+        );
+        throw new Error("API 响应格式不符合预期 (非流式)");
+      }
+      polishedContent = result.choices[0].message.content;
     }
-
-    const polishedContent = result.choices[0].message.content;
+    
     console.log("[润色助手] Polished content received:", polishedContent);
 
     // 用润色后的内容更新消息
@@ -432,7 +476,7 @@ jQuery(async () => {
     $("#polishing_enabled").on("input", onEnabledInput);
     // Add listener for the new matching_label input
     $(
-      "#model_url, #model_name, #api_key, #prompt_text, #banned_words, #matching_label"
+      "#model_url, #model_name, #api_key, #prompt_text, #banned_words, #matching_label, #use_streaming"
     ).on("input", saveApiSettings);
 
     // 加载设置

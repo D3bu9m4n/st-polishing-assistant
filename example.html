@@ -18,34 +18,43 @@
             <div class="polishing-assistant_block flex-container">
                 <label for="model_url">模型URL:</label>
                 <input id="model_url" type="text" class="text_pole" placeholder="https://api.deepseek.com/v1/chat/completions" />
-            </div>
+    </div>
+    <div class="inline-drawer">
+        <p>Enter the API URL for the polishing service. Example: <code>https://api.openai.com/v1/chat/completions</code></p>
+    </div>
 
-            <div class="polishing-assistant_block flex-container">
-                <label for="model_name">模型名称:</label>
-                <input id="model_name" type="text" class="text_pole" placeholder="deepseek-chat" />
-            </div>
+    <h4>API Key</h4>
+    <div class="input_group">
+        <input type="password" id="api_key" class="text_pole" placeholder="Enter your API key">
+    </div>
+    <div class="inline-drawer">
+        <p>Enter your API key for the polishing service.</p>
+    </div>
 
-            <div class="polishing-assistant_block flex-container">
-                <label for="api_key">API密钥:</label>
-                <input id="api_key" type="text" class="text_pole" placeholder="sk-..." />
-            </div>
+    <h4>Model Name</h4>
+    <div class="input_group">
+        <input type_id="model_name" class="text_pole" placeholder="Enter the model name (e.g., gpt-3.5-turbo)">
+    </div>
+    <div class="inline-drawer">
+        <p>Enter the model name to be used for polishing. Example: <code>gpt-3.5-turbo</code></p>
+    </div>
 
-            <div class="polishing-assistant_block flex-container">
-                <label for="banned_words">禁词(逗号分隔):</label>
-                <input id="banned_words" type="text" class="text_pole" placeholder="一丝,一抹,一丝丝,一般,似乎,仿佛,野兽,小兽,幼兽,他她知道,狡黠,不易察觉,甜腻,闪过,闪着,闪烁,低吼,该死的,发白,泛白,尖叫,灭顶" />
-            </div>
+    <h4>Prompt</h4>
+    <div class="input_group">
+        <textarea id="prompt" class="text_pole" placeholder="Enter the prompt for polishing"></textarea>
+    </div>
+    <div class="inline-drawer">
+        <p>Enter the prompt that will be used to instruct the model on how to polish the text. You can use {{text}} as a placeholder for the content to be polished.</p>
+    </div>
 
-            <div class="polishing-assistant_block flex-container">
-                <label for="prompt_text">匹配标签对:</label>
-                <input id="matching_label" type="text" class="text_pole" placeholder="指定需要提取润色内容的标签对，用 | 分隔多对，用 , 分隔开闭标签。" />
-            </div>
-
-            <div class="polishing-assistant_block flex-container">
-                <label for="prompt_text">提示词:</label>
-                <textarea id="prompt_text" class="text_pole" rows="5" placeholder="输入润色提示词..."></textarea>
-            </div>
-
-            <hr class="sysHR" />
-        </div>
+    <h4>Use Streaming</h4>
+    <div class="input_group">
+        <input type="checkbox" id="use_streaming" name="use_streaming">
+        <label for="use_streaming">Use streaming API</label>
+    </div>
+    <div class="inline-drawer">
+        <p>Check this if your upstream API model supports/requires streaming responses.</p>
+    </div>
+</div>
     </div>
 </div>
